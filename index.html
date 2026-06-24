@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarTv Universal Dashboard</title>
+    
+    <script src="https://content.jwplatform.com/libraries/KB5zFt7A.js"></script>
+    <script type="text/javascript">
+        jwplayer.key = 'Khpp2dHxlBJHC8MCmLnBuV2jK/DwDnJMniwF6EO9HC/riJ712ZmbHg==';
+    </script>
+
+    <style>
+        :root { --primary: #ff0055; --secondary: #00d2ff; --bg-dark: #0f1115; --bg-panel: #1a1d24; --border: #2d3139; --text-light: #fff; --text-muted: #aaa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-dark); color: var(--text-light); margin: 0; padding: 20px; transition: 0.3s; }
+        
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .header h1 { margin: 0; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+        .header h1 span { color: var(--secondary); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        #toolsView, #playlistsView, #channelsView, #playerView { display: none; }
+        #toolsView { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        @media (max-width: 768px) { #toolsView { grid-template-columns: 1fr; } }
+
+        .panel { background: var(--bg-panel); padding: 20px; border-radius: 10px; border: 1px solid var(--border); position: relative;}
+        .panel h3 { margin-top: 0; color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 16px; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .input-group input, .input-group select { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #111; color: var(--secondary); font-size: 14px; box-sizing: border-box; }
+        .input-group input[type="file"] { padding: 7px; color: var(--text-light); background: #222630; border: 1px dashed var(--secondary); cursor: pointer;}
+        
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.3s; color: #fff; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .btn-primary { background: var(--primary); } .btn-primary:hover { background: #c20042; }
+        .btn-secondary { background: var(--secondary); color: #000; } .btn-secondary:hover { background: #00a8cc; color: #fff; }
+        .btn-warning { background: #ffaa00; color: #000; margin-bottom: 15px; } .btn-warning:hover { background: #cc8800; color: #fff; }
+        .btn-success { background: #00cc88; color: #000; } .btn-success:hover { background: #00aa77; }
+        .btn-test { background: #8e44ad; color: #fff; } .btn-test:hover { background: #732d91; }
+        .btn-sesu { background: #e67e22; color: #fff; } .btn-sesu:hover { background: #d35400; }
+        .btn-known { background: #3498db; color: #fff; } .btn-known:hover { background: #2980b9; }
+
+        .proxy-toggle { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--secondary); margin-top: 10px; background: #111; padding: 10px; border-radius: 5px; border: 1px solid #222; flex-wrap: wrap; }
+        .proxy-toggle select { background: #222; color: #fff; border: 1px solid #444; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+
+        /* --- PLAYLIST TILES --- */
+        .playlist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+        
+        .playlist-card {
+            position: relative; background: #1a1d24; border-radius: 10px; padding: 20px; z-index: 1; cursor: pointer; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .playlist-card::before {
+            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, #ff0055, #00d2ff, #ffaa00, #ff0055);
+            z-index: -1; background-size: 400%; opacity: 0; transition: opacity 0.3s ease-in-out; border-radius: 12px;
+        }
+        .playlist-card:hover::before { opacity: 1; animation: animateBorder 3s linear infinite; }
+        .playlist-card::after {
+            content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px;
+            background: #222630; z-index: -1; border-radius: 8px;
+        }
+        @keyframes animateBorder { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .card-icon { font-size: 30px; margin-bottom: 10px; }
+        .card-title { font-weight: bold; font-size: 14px; color: #fff; text-transform: capitalize; word-break: break-word; }
+        .card-type { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+        
+        .delete-btn {
+            position: absolute; top: 5px; right: 5px; background: rgba(255,0,85,0.2); color: #ff0055; border: none; border-radius: 50%;
+            width: 25px; height: 25px; font-size: 12px; cursor: pointer; opacity: 0; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+        }
+        .playlist-card:hover .delete-btn { opacity: 1; }
+        .delete-btn:hover { background: #ff0055; color: #fff; }
+
+        /* --- CHANNELS LIST --- */
+        .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+        .category-block { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+        .category-btn { width: 100%; text-align: left; padding: 15px; background: #222630; color: #fff; border: none; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
+        .category-btn:hover { background: #2d3139; }
+        .category-btn::after { content: '▼'; font-size: 12px; color: var(--primary); }
+        .category-btn.active::after { content: '▲'; }
+        
+        .channel-list { display: none; padding: 15px; background: #15181e; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+        .channel-list.active { display: grid; }
+        .channel-list.loading { display: flex; justify-content: center; align-items: center; color: var(--text-muted); font-size: 14px; padding: 20px; }
+        
+        .play-btn { background: #2d3139; color: #fff; border: 1px solid #444; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: 0.2s; text-align: left; font-size: 13px; display: flex; align-items: center; overflow: hidden; }
+        .play-btn:hover { background: var(--bg-panel); border-color: var(--secondary); box-shadow: inset 0 0 10px rgba(0,210,255,0.2); }
+        .ch-logo { width: 30px; height: 30px; object-fit: contain; margin-right: 10px; border-radius: 4px; background: #111; flex-shrink: 0; }
+        .ch-logo[src=""] { display: none; }
+        .ch-logo.error { display: none; }
+        .ch-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* --- PLAYER CINEMA MODE --- */
+        #playerView { background: var(--bg-panel); padding: 15px; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 5px 25px rgba(0,0,0,0.8); }
+        .player-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #111; padding: 10px; border-radius: 5px; border: 1px solid #222; flex-wrap: wrap; gap: 10px; }
+        .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-btn { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .nav-btn:hover { background: var(--primary); }
+        .now-playing { font-weight: bold; color: var(--secondary); font-size: 16px; }
+        
+        .quality-selector { display: flex; align-items: center; gap: 8px; background: #111; padding: 5px 12px; border-radius: 5px; border: 1px solid #222; }
+        .quality-selector label { font-size: 12px; color: var(--text-muted); font-weight: bold; }
+        .quality-selector select { background: #222; color: #fff; border: 1px solid #444; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .quality-selector select:disabled { opacity: 0.4; cursor: not-allowed; }
+        .quality-badge { font-size: 11px; color: var(--secondary); background: rgba(0,210,255,0.1); padding: 2px 10px; border-radius: 10px; }
+        
+        .video-wrapper { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 5px; overflow: hidden; position: relative; touch-action: none; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        #brightnessOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0); pointer-events: none; z-index: 50; transition: background 0.1s; }
+        #gestureIndicator { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); padding: 15px 25px; border-radius: 10px; color: #fff; font-size: 24px; font-weight: bold; z-index: 60; pointer-events: none; }
+        
+        .custom-error { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; z-index: 100; }
+        .custom-error h2 { color: var(--primary); margin-bottom: 10px; text-transform: uppercase;}
+        .custom-error p { color: #fff; font-size: 14px; line-height: 1.5; }
+        .custom-error .retry-btn { margin-top: 15px; background: var(--secondary); color: #000; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .custom-error .retry-btn:hover { background: #00a8cc; }
+
+        /* --- GLOWING CIRCULAR TILES --- */
+        .suggested-section { margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .suggested-title { font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+        .circular-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; padding-top: 5px; }
+        .circular-container::-webkit-scrollbar { height: 6px; }
+        .circular-container::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        
+        .circle-tile {
+            min-width: 80px; width: 80px; height: 80px;
+            border-radius: 50%; background: #222630; border: 2px solid #444; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; font-size: 10px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 0 10px rgba(0, 210, 255, 0.1);
+            transition: all 0.3s ease; padding: 5px; overflow: hidden; text-overflow: ellipsis; 
+            background-size: cover; background-position: center; background-repeat: no-repeat; position: relative;
+        }
+        .circle-tile::before { content: ''; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); border-radius: 50%; transition: 0.3s; }
+        .circle-tile span { position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .circle-tile:hover { transform: scale(1.1); border-color: var(--secondary); box-shadow: 0 0 15px var(--secondary), inset 0 0 10px rgba(0,210,255,0.3); z-index: 10; }
+        .circle-tile:hover::before { background: rgba(0,0,0,0.2); }
+        .circle-tile .default-logo { font-size: 30px; }
+
+        /* --- HIDE MANUAL ENTRY --- */
+        #manualEntryPanel { display: none !important; }
+
+        .proxy-status { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+        .proxy-status.active { color: #00cc88; }
+        .proxy-status.fallback { color: #ffaa00; }
+        .proxy-status.failed { color: #ff0055; }
+        .proxy-status.off { color: #666; }
+        
+        .badge-success { background: #00cc88; color: #000; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .badge-warning { background: #ffaa00; color: #000; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        .badge-danger { background: #ff0055; color: #fff; padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: bold; }
+        
+        .tip { background: #222630; border-left: 3px solid var(--secondary); padding: 8px 12px; margin-top: 10px; border-radius: 4px; font-size: 12px; color: var(--text-muted); }
+        .status-msg { color: #ffaa00; font-size: 14px; margin-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="header" id="mainHeader">
+        <h1>📺 <span>DarTv</span> Universal Dashboard</h1>
+    </div>
+
+    <div class="container">
+
+        <div id="toolsView">
+            <div class="panel">
+                <h3>1. Target Source Selector</h3>
+                <p style="font-size: 12px; color: var(--text-muted);">Select a source and click Load.</p>
+                
+                <div class="input-group">
+                    <select id="sourceDropdown"></select>
+                </div>
+                
+                <div class="proxy-toggle">
+                    <input type="checkbox" id="useFetchProxy" checked>
+                    <label for="useFetchProxy" style="font-weight: bold;">Use Proxy to Download Playlist</label>
+                    <span class="proxy-status active" id="fetchProxyStatus">● Active</span>
+                </div>
+
+                <button class="btn btn-warning" id="fetchBtn" onclick="fetchSelectedSource()">⚡ Load Selected Source</button>
+                <div id="fetchLoading" style="display:none; color: #ffaa00; font-size: 13px; text-align: center; margin-top: 10px;">Fetching...</div>
+                <div id="statusMessage" class="status-msg"></div>
+
+                <hr style="border-color: #333; margin: 15px 0;">
+
+                <div class="input-group">
+                    <label>Upload Local File</label>
+                    <input type="file" id="fileUpload" accept=".json,.m3u,.m3u8,.txt,.mpd">
+                </div>
+                <button class="btn btn-secondary" style="background: #333; color: white;" onclick="handleFileUpload()">📂 Load Local File</button>
+                
+                <button class="btn btn-test" onclick="testPlayer()" style="margin-top:10px;">🎬 Test Player (Big Buck Bunny)</button>
+            </div>
+
+            <!-- MANUAL ENTRY PANEL - HIDDEN -->
+            <div class="panel" id="manualEntryPanel">
+                <h3>2. Manual Entry</h3>
+                <div class="input-group">
+                    <label>Stream / Iframe URL</label>
+                    <input type="text" id="manualUrl" placeholder="Stream (.m3u8, .mpd) or Player (.php)">
+                </div>
+                <div class="input-group">
+                    <label>Widevine License (Optional)</label>
+                    <input type="text" id="manualLic" placeholder="License URL or keyId:key">
+                </div>
+                <div class="input-group">
+                    <label>Auth Token (Optional)</label>
+                    <input type="text" id="manualToken" placeholder="e.g., Bearer xxxx">
+                </div>
+                <button class="btn btn-primary" onclick="playManual()">▶ Play Now</button>
+            </div>
+
+            <!-- REPLACEMENT PANEL - Repo Scanners & Known Playlists -->
+            <div class="panel">
+                <h3>2. Playlist Loaders</h3>
+                <button class="btn btn-known" onclick="loadKnownSrhady()" style="margin-bottom:10px;">📦 Load Known srhady Playlists</button>
+                <button class="btn btn-known" onclick="loadKnownSesu()" style="margin-bottom:10px;">📦 Load Known sesukyothole Playlists</button>
+                <button class="btn btn-success" onclick="scanSrhadyRepos()" style="margin-bottom:10px;">🔍 Scan srhady Repositories</button>
+                <button class="btn btn-sesu" onclick="scanSesukyotholeRepos()">🔍 Scan sesukyothole Repositories</button>
+                <div id="repoLoading" style="display:none; color: #ffaa00; font-size: 13px; text-align: center; margin-top: 10px;">Scanning repos...</div>
+                <div class="tip" style="margin-top:10px;">💡 <strong>Known Playlists</strong> load instantly without GitHub API calls. <strong>Scan</strong> may hit rate limits; use sparingly.</div>
+            </div>
+        </div>
+
+        <div class="panel" id="playlistsView" style="margin-bottom: 20px;">
+            <div class="view-header">
+                <h2 style="margin:0; color:var(--secondary);">📂 My Folders & Active Playlists</h2>
+                <span id="playlistCount" style="color:var(--text-muted); font-size:14px;">0 Folders</span>
+            </div>
+            <div id="fileDirectoryContainer" class="playlist-grid"></div>
+        </div>
+
+        <div class="panel" id="channelsView" style="margin-bottom: 20px;">
+            <div class="view-header">
+                <div>
+                    <button class="nav-btn" onclick="showView('directory')" style="margin-right:15px; background:#444;">⬅ Back to Folders</button>
+                    <h2 id="currentPlaylistTitle" style="display:inline; margin:0; color:var(--primary); text-transform: capitalize;">Folder Name</h2>
+                </div>
+                <span id="channelCount" style="color:var(--text-muted); font-size:14px;">0 Channels</span>
+            </div>
+            <div id="categoriesContainer"></div>
+            <div id="channelLoading" style="display:none; text-align:center; color:var(--secondary); padding:20px; font-weight:bold;">Downloading Playlist...</div>
+        </div>
+
+        <div id="playerView">
+            <div class="player-nav">
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="showView('channels')">⬅ Channels</button>
+                    <button class="nav-btn" onclick="showView('directory')">📂 Folders</button>
+                </div>
+                <div class="now-playing" id="nowPlayingText">Select a channel...</div>
+                <div class="quality-selector" id="qualitySelector">
+                    <label>📶</label>
+                    <select id="qualitySelect" disabled onchange="changeQuality(this.value)">
+                        <option value="auto">Auto</option>
+                    </select>
+                    <span class="quality-badge" id="qualityBadge">Auto</span>
+                </div>
+            </div>
+
+            <div class="video-wrapper" id="playerWrapper">
+                <div id="brightnessOverlay"></div>
+                <div id="jw-player-container" style="display: none;"></div>
+                
+                <div id="iframe-container" style="display: none; width:100%; height:100%;">
+                    <iframe id="iframe-element" allowfullscreen allow="encrypted-media" referrerpolicy="no-referrer"></iframe>
+                </div>
+                
+                <div id="gestureIndicator">🔊 50%</div>
+                
+                <div id="dartv-error" class="custom-error">
+                    <h2>⚠️ Stream Offline or Blocked</h2>
+                    <p id="errorReason">The stream server rejected the connection.<br>Try enabling the proxy below or use a different proxy.</p>
+                    <button class="retry-btn" onclick="retryStream()">🔄 Retry with Proxy</button>
+                </div>
+            </div>
+
+            <div class="proxy-toggle">
+                <input type="checkbox" id="useStreamProxy" checked onchange="toggleProxy()">
+                <label for="useStreamProxy" style="font-weight: bold;">Use Proxy for Stream (CORS Bypass)</label>
+                <span class="proxy-status active" id="streamProxyStatus">● On</span>
+            </div>
+            <div class="tip">💡 Proxy is ON by default. If a stream fails, try toggling it OFF/ON.</div>
+
+            <div class="suggested-section" id="suggestedSection" style="display: none;">
+                <div class="suggested-title">🌟 Also in this Category</div>
+                <div class="circular-container" id="circularContainer"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // PROXY & FETCH
+        // ==========================================
+        const CLOUDFLARE_PROXY_URL = "https://sports-proxy.darajazb.workers.dev/?url="; 
+        const CORS_PROXY = "https://corsproxy.io/?url=";
+
+        async function smartFetch(url) {
+            const useProxy = document.getElementById('useFetchProxy')?.checked !== false;
+            setStatus('⏳ Fetching direct...');
+            
+            // Try direct first (especially for GitHub raw)
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text && text.length > 100 && !text.includes('<!DOCTYPE html>')) {
+                        updateProxyStatus('fetch', true, 'direct');
+                        setStatus('✅ Loaded directly');
+                        return text;
+                    }
+                }
+            } catch(e) {
+                console.log('Direct failed:', e);
+            }
+
+            if (!useProxy) {
+                setStatus('❌ Direct failed and proxy disabled');
+                throw new Error('Direct failed and proxy disabled');
+            }
+
+            // Try Cloudflare proxy
+            setStatus('⏳ Trying Cloudflare proxy...');
+            try {
+                const proxyUrl = CLOUDFLARE_PROXY_URL + encodeURIComponent(url);
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text && text.length > 100 && !text.includes('<!DOCTYPE html>')) {
+                        updateProxyStatus('fetch', true, 'cloudflare');
+                        setStatus('✅ Loaded via Cloudflare proxy');
+                        return text;
+                    }
+                }
+            } catch(e) {
+                console.log('Cloudflare proxy failed:', e);
+            }
+
+            // Try CORS proxy
+            setStatus('⏳ Trying CORS proxy...');
+            try {
+                const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text && text.length > 100 && !text.includes('<!DOCTYPE html>')) {
+                        updateProxyStatus('fetch', true, 'corsproxy');
+                        setStatus('✅ Loaded via CORS proxy');
+                        return text;
+                    }
+                }
+            } catch(e) {
+                console.log('CORS proxy failed:', e);
+            }
+
+            setStatus('❌ All fetch methods failed');
+            updateProxyStatus('fetch', false);
+            throw new Error('All fetch attempts failed');
+        }
+
+        function setStatus(msg) {
+            const el = document.getElementById('statusMessage');
+            if (el) el.textContent = msg;
+        }
+
+        function updateProxyStatus(type, active, proxyId) {
+            const el = type === 'fetch' ? document.getElementById('fetchProxyStatus') : document.getElementById('streamProxyStatus');
+            if (!el) return;
+            if (active) {
+                el.textContent = `● ${proxyId || 'Active'}`;
+                el.className = 'proxy-status active';
+            } else {
+                el.textContent = '● Failed';
+                el.className = 'proxy-status failed';
+            }
+        }
+
+        function updateStreamProxyStatus(active) {
+            const el = document.getElementById('streamProxyStatus');
+            if (!el) return;
+            if (active) {
+                el.textContent = '● On';
+                el.className = 'proxy-status active';
+            } else {
+                el.textContent = '○ Off';
+                el.className = 'proxy-status off';
+            }
+        }
+
+        // ==========================================
+        // TEST PLAYER
+        // ==========================================
+        function testPlayer() {
+            const testUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+            document.getElementById('nowPlayingText').innerText = '🎬 Test Stream (Big Buck Bunny)';
+            playChannel(testUrl, '', 'Big Buck Bunny', '', '', '', '');
+        }
+
+        // ==========================================
+        // LOAD KNOWN PLAYLISTS (No API calls)
+        // ==========================================
+        function loadKnownSrhady() {
+            const known = [
+                { name: 'crichd-speical-live-event', url: 'https://raw.githubusercontent.com/srhady/crichd-speical-live-event/main/playlist.m3u' },
+                { name: 'data', url: 'https://raw.githubusercontent.com/srhady/data/main/playlist.m3u' },
+                { name: 'Fancode-bd', url: 'https://raw.githubusercontent.com/srhady/Fancode-bd/main/playlist.m3u' },
+                { name: 'SonyLiv', url: 'https://raw.githubusercontent.com/srhady/SonyLiv/main/playlist.m3u' },
+                { name: 'Sports', url: 'https://raw.githubusercontent.com/srhady/Sports/main/playlist.m3u' }
+            ];
+            let added = 0;
+            known.forEach(item => {
+                if (!state.playlists.find(p => p.url === item.url)) {
+                    state.playlists.push({
+                        name: item.name,
+                        url: item.url,
+                        type: 'srhady (known)',
+                        icon: '📁'
+                    });
+                    added++;
+                }
+            });
+            saveLocalPlaylists();
+            renderDirectoryGrid();
+            setStatus(`✅ Added ${added} known srhady playlists.`);
+        }
+
+        function loadKnownSesu() {
+            const known = [
+                { name: 'My-Stuff/IPtvTree', url: 'https://raw.githubusercontent.com/sesukyothole/My-Stuff/ead00631e424494dc9f74c41eb50ac1e2388c311/IPtvTree.m3u' }
+                // Add more known playlists if any
+            ];
+            let added = 0;
+            known.forEach(item => {
+                if (!state.playlists.find(p => p.url === item.url)) {
+                    state.playlists.push({
+                        name: item.name,
+                        url: item.url,
+                        type: 'sesukyothole (known)',
+                        icon: '📁'
+                    });
+                    added++;
+                }
+            });
+            saveLocalPlaylists();
+            renderDirectoryGrid();
+            setStatus(`✅ Added ${added} known sesukyothole playlists.`);
+        }
+
+        // ==========================================
+        // SCAN REPOSITORIES - WITH EXPONENTIAL BACKOFF
+        // ==========================================
+        async function scanUserRepos(username) {
+            const loading = document.getElementById('repoLoading');
+            loading.style.display = 'block';
+            loading.textContent = `🔍 Fetching repos for ${username}...`;
+
+            try {
+                let page = 1;
+                let allRepos = [];
+                let hasMore = true;
+                let retryDelay = 2000; // start with 2s
+                
+                while (hasMore) {
+                    const apiUrl = `https://api.github.com/users/${username}/repos?per_page=100&page=${page}&type=public`;
+                    const response = await fetch(apiUrl, {
+                        headers: { 'User-Agent': 'DarTv-Player' }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            loading.textContent = `⚠️ Rate limit hit. Waiting ${retryDelay/1000}s...`;
+                            await new Promise(resolve => setTimeout(resolve, retryDelay));
+                            retryDelay = Math.min(retryDelay * 2, 30000); // exponential backoff max 30s
+                            continue; // retry same page
+                        }
+                        loading.textContent = `❌ GitHub API error: ${response.status}`;
+                        setTimeout(() => loading.style.display = 'none', 3000);
+                        return;
+                    }
+                    
+                    const repos = await response.json();
+                    if (!Array.isArray(repos) || repos.length === 0) {
+                        hasMore = false;
+                        break;
+                    }
+                    
+                    allRepos = allRepos.concat(repos);
+                    page++;
+                    
+                    if (repos.length < 100) {
+                        hasMore = false;
+                    }
+                    
+                    // Reset delay after successful request
+                    retryDelay = 2000;
+                }
+
+                loading.textContent = `📁 Found ${allRepos.length} repos. Scanning contents...`;
+                let foundFiles = 0;
+
+                for (let i = 0; i < allRepos.length; i++) {
+                    const repo = allRepos[i];
+                    loading.textContent = `📂 Scanning ${i+1}/${allRepos.length}: ${repo.name} ...`;
+                    
+                    try {
+                        const contentsUrl = `https://api.github.com/repos/${username}/${repo.name}/contents/`;
+                        const contentsRes = await fetch(contentsUrl, {
+                            headers: { 'User-Agent': 'DarTv-Player' }
+                        });
+                        
+                        if (!contentsRes.ok) {
+                            // Skip if can't read (empty/private)
+                            continue;
+                        }
+                        
+                        const contents = await contentsRes.json();
+                        if (!Array.isArray(contents)) continue;
+                        
+                        for (const file of contents) {
+                            if (!file.download_url) continue;
+                            const ext = file.name.split('.').pop().toLowerCase();
+                            if (['m3u', 'm3u8', 'json'].includes(ext)) {
+                                if (!state.playlists.find(p => p.url === file.download_url)) {
+                                    state.playlists.push({
+                                        name: cleanFileName(file.name),
+                                        url: file.download_url,
+                                        type: `${username}/${repo.name}`,
+                                        icon: "📁"
+                                    });
+                                    foundFiles++;
+                                }
+                            }
+                        }
+                    } catch(e) {
+                        continue;
+                    }
+                    
+                    // Delay to avoid rate limit (500ms)
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+                saveLocalPlaylists();
+                renderDirectoryGrid();
+                loading.textContent = `✅ Found ${foundFiles} playlists from ${allRepos.length} repos!`;
+                setTimeout(() => loading.style.display = 'none', 3000);
+                
+            } catch(e) {
+                loading.textContent = '❌ Error scanning repos: ' + e.message;
+                console.error(e);
+                setTimeout(() => loading.style.display = 'none', 3000);
+            }
+        }
+
+        async function scanSrhadyRepos() {
+            await scanUserRepos('srhady');
+        }
+
+        async function scanSesukyotholeRepos() {
+            await scanUserRepos('sesukyothole');
+        }
+
+        // ==========================================
+        // SOURCES - INCLUDING ALL KNOWN
+        // ==========================================
+        const SOURCES = [
+            { type: 'link', label: "🏏 CricHD ALL", value: "https://raw.githubusercontent.com/abusaeeidx/CricHd-playlists-Auto-Update-permanent/refs/heads/main/ALL.m3u", icon: "🏏" },
+            { type: 'link', label: "📺 Chaupal (DRM)", value: "https://raw.githubusercontent.com/dartv-ajaz/chaupal/main/chaupal.m3u", icon: "📺" },
+            { type: 'link', label: "🍁 IPTV Tree (sesukyothole)", value: "https://raw.githubusercontent.com/sesukyothole/My-Stuff/ead00631e424494dc9f74c41eb50ac1e2388c311/IPtvTree.m3u", icon: "🍁" },
+            { type: 'repo', label: "📁 My-Stuff Repo (sesukyothole)", value: "sesukyothole/My-Stuff" },
+            { type: 'repo', label: "📁 srhady/crichd-speical-live-event", value: "srhady/crichd-speical-live-event" },
+            { type: 'repo', label: "📁 srhady/data", value: "srhady/data" },
+            { type: 'repo', label: "📁 srhady/Fancode-bd", value: "srhady/Fancode-bd" },
+            { type: 'repo', label: "📁 srhady/SonyLiv", value: "srhady/SonyLiv" },
+            { type: 'repo', label: "📁 srhady/Sports", value: "srhady/Sports" },
+            { type: 'repo', label: "📁 dartv-ajaz/Live-Sports-Group-A", value: "dartv-ajaz/Live-Sports-Group-A" },
+            { type: 'repo', label: "📁 dartv-ajaz/chaupal", value: "dartv-ajaz/chaupal" },
+            { type: 'link', label: "⚽ Global: Sports", value: "https://iptv-org.github.io/iptv/categories/sports.m3u", icon: "⚽" },
+            { type: 'link', label: "🎬 Global: Movies", value: "https://iptv-org.github.io/iptv/categories/movies.m3u", icon: "🎬" },
+            { type: 'link', label: "🎭 Global: Entertainment", value: "https://iptv-org.github.io/iptv/categories/entertainment.m3u", icon: "🎭" },
+            { type: 'link', label: "📰 Global: News", value: "https://iptv-org.github.io/iptv/categories/news.m3u", icon: "📰" },
+            { type: 'link', label: "🧸 Global: Kids", value: "https://iptv-org.github.io/iptv/categories/kids.m3u", icon: "🧸" },
+            { type: 'link', label: "🌏 Region: India / South Asia", value: "https://iptv-org.github.io/iptv/regions/sas.m3u", icon: "🌏" },
+            { type: 'link', label: "🌙 Region: Arab / Middle East", value: "https://iptv-org.github.io/iptv/regions/arab.m3u", icon: "🌙" },
+            { type: 'link', label: "🏴‍☠️ Pirates TV", value: "https://raw.githubusercontent.com/FunctionError/PiratesTv/refs/heads/main/combined_playlist.m3u", icon: "🏴‍☠️" },
+            { type: 'link', label: "🏆 WC-2026", value: "https://raw.githubusercontent.com/Jazzdar1/darfree.tv/refs/heads/main/Subirmaxpro.m3u", icon: "🏆" },
+            { type: 'link', label: "🌎 World CUP Max", value: "https://raw.githubusercontent.com/subirkumarpaul/Subirmaxpro/refs/heads/main/Subirmaxpro", icon: "🌎" },
+            { type: 'link', label: "📺 Soledad TV", value: "https://raw.githubusercontent.com/Soledadrs/jiekou/606200413054f2e24f995e3c404393782db27704/soledadTVbox/m3u/IPTV.m3u", icon: "📺" }
+        ];
+
+        let state = {
+            playlists: [], 
+            prefetchedData: {},
+            currentCategories: {},
+            totalChannelsActive: 0,
+            currentCategoryName: "",
+            currentStreamUrl: "",
+            currentEmbedUrl: "",
+            currentName: "",
+            currentLicense: "",
+            currentToken: "",
+            currentRef: "",
+            currentUa: "",
+            playerInstance: null,
+            isIframeMode: false,
+            retryCount: 0
+        };
+
+        function hexToBase64Url(hex) {
+            let str = "";
+            for (let i = 0; i < hex.length; i += 2) str += String.fromCharCode(parseInt(hex.substring(i, i+2), 16));
+            return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        document.addEventListener("DOMContentLoaded", () => { 
+            const dropdown = document.getElementById('sourceDropdown');
+            SOURCES.forEach((s, idx) => {
+                dropdown.innerHTML += `<option value="${idx}">${s.label}</option>`;
+            });
+            loadLocalPlaylists();
+            renderDirectoryGrid();
+            showView('directory'); 
+            dropdown.value = "0"; 
+            setTimeout(() => fetchSelectedSource(), 500);
+            updateStreamProxyStatus(true);
+        });
+
+        function showView(view) {
+            document.getElementById('mainHeader').style.display = view === 'player' ? 'none' : 'block';
+            document.getElementById('toolsView').style.display = (view === 'directory' || view === 'channels') ? 'grid' : 'none';
+            document.getElementById('playlistsView').style.display = view === 'directory' ? 'block' : 'none';
+            document.getElementById('channelsView').style.display = view === 'channels' ? 'block' : 'none';
+            document.getElementById('playerView').style.display = view === 'player' ? 'block' : 'none';
+
+            if(view !== 'player') {
+                if(state.playerInstance) {
+                    try { state.playerInstance.stop(); } catch(e) {}
+                }
+                document.getElementById('iframe-element').src = ""; 
+                document.getElementById("dartv-error").style.display = "none";
+                document.getElementById('qualitySelect').disabled = true;
+                document.getElementById('qualityBadge').textContent = 'Auto';
+            }
+        }
+
+        function cleanFileName(filename) {
+            let name = filename.split('.')[0]; 
+            return name.replace(/_/g, " ").replace(/-/g, " "); 
+        }
+
+        // ==========================================
+        // SOURCE MANAGER
+        // ==========================================
+        async function fetchSelectedSource() {
+            const idx = document.getElementById('sourceDropdown').value;
+            if(idx === "") return;
+            const source = SOURCES[idx];
+
+            document.getElementById('fetchBtn').style.display = 'none';
+            document.getElementById('fetchLoading').style.display = 'block';
+            setStatus('');
+
+            if (source.type === 'repo') {
+                const parts = source.value.split('/');
+                await fetchRepoContents(parts[0], parts[1]);
+                document.getElementById('fetchBtn').style.display = 'flex';
+                document.getElementById('fetchLoading').style.display = 'none';
+                renderDirectoryGrid();
+                setStatus('✅ Repo scanned');
+            } else {
+                let exists = state.playlists.find(p => p.url === source.value);
+                if (!exists) {
+                    state.playlists.push({
+                        name: source.label.split(': ')[1] || source.label,
+                        url: source.value,
+                        type: "Global List",
+                        icon: source.icon || "🌐"
+                    });
+                }
+                saveLocalPlaylists(); 
+                renderDirectoryGrid();
+                
+                let added = state.playlists.find(p => p.url === source.value);
+                if (added) {
+                    setTimeout(() => openPlaylist(added.url, added.name), 400);
+                }
+                document.getElementById('fetchBtn').style.display = 'flex';
+                document.getElementById('fetchLoading').style.display = 'none';
+            }
+        }
+
+        async function fetchRepoContents(owner, repo) {
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/`;
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: { 'User-Agent': 'DarTv-Player' }
+                });
+                if (!response.ok) return; 
+                
+                const files = await response.json();
+                for (const file of files) {
+                    if (!file.download_url) continue;
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (['json', 'm3u', 'm3u8', 'txt'].includes(ext) || !file.name.includes('.')) {
+                        if (!state.playlists.find(p => p.url === file.download_url)) {
+                            state.playlists.push({
+                                name: cleanFileName(file.name),
+                                url: file.download_url,
+                                type: `Repo: ${repo}`,
+                                icon: "📁"
+                            });
+                        }
+                    }
+                }
+            } catch(e) { alert("Failed to fetch repository files."); }
+        }
+
+        function removePlaylist(index) {
+            state.playlists.splice(index, 1);
+            saveLocalPlaylists();
+            renderDirectoryGrid();
+        }
+
+        function saveLocalPlaylists() {
+            const custom = state.playlists.filter(p => p.type === "My Custom");
+            localStorage.setItem("myPlaylists", JSON.stringify(custom));
+        }
+
+        function loadLocalPlaylists() {
+            const saved = JSON.parse(localStorage.getItem("myPlaylists") || "[]");
+            state.playlists = [...state.playlists, ...saved];
+        }
+
+        function renderDirectoryGrid() {
+            const container = document.getElementById('fileDirectoryContainer');
+            document.getElementById('playlistCount').innerText = `${state.playlists.length} Folders Available`;
+            container.innerHTML = "";
+
+            if(state.playlists.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#555; padding: 20px; width: 100%;">No playlists loaded. Use dropdown or Load Known buttons above.</div>`;
+                return;
+            }
+
+            state.playlists.forEach((list, idx) => {
+                const card = document.createElement('div');
+                card.className = 'playlist-card';
+                card.innerHTML = `
+                    <button class="delete-btn" onclick="event.stopPropagation(); removePlaylist(${idx})" title="Delete">✖</button>
+                    <div class="card-icon">${list.icon || "📡"}</div>
+                    <div class="card-title">${list.name}</div>
+                    <div class="card-type">${list.type || "Playlist"}</div>
+                `;
+                card.onclick = () => openPlaylist(list.url, list.name);
+                container.appendChild(card);
+            });
+        }
+
+        function handleFileUpload() {
+            const fileInput = document.getElementById('fileUpload');
+            if(!fileInput.files.length) return;
+            const file = fileInput.files[0];
+            
+            if (file.name.endsWith('.mpd')) {
+                document.getElementById('manualUrl').value = URL.createObjectURL(file);
+                playManual();
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                openRawData(e.target.result, cleanFileName(file.name), file.name);
+            };
+            reader.readAsText(file);
+        }
+
+        // ==========================================
+        // PLAYLIST LOADER (ENHANCED PARSING)
+        // ==========================================
+        async function openPlaylist(url, name) {
+            showView('channels');
+            document.getElementById('currentPlaylistTitle').innerText = name;
+            document.getElementById('categoriesContainer').innerHTML = "";
+            
+            const loadingText = document.getElementById('channelLoading');
+            loadingText.style.display = "block";
+            loadingText.innerText = "Downloading Playlist...";
+
+            state.currentCategories = {};
+            state.totalChannelsActive = 0;
+
+            let text = state.prefetchedData[url] || "";
+            
+            if(!text && url) {
+                try {
+                    text = await smartFetch(url);
+                    state.prefetchedData[url] = text; 
+                } catch(e) {
+                    loadingText.style.display = "none";
+                    alert("Could not fetch playlist. Check console for details.");
+                    return;
+                }
+            }
+
+            loadingText.innerText = "Parsing Channels...";
+            
+            setTimeout(() => {
+                openRawData(text, name, url);
+                loadingText.style.display = "none";
+            }, 100);
+        }
+
+        function openRawData(text, name, identifier) {
+            if(!text) return renderChannelsLazy();
+            
+            try {
+                // Try JSON first
+                if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                    parseFuzzyJSON(JSON.parse(text));
+                } else if (text.includes('#EXTM3U') || text.includes('#EXTINF')) {
+                    parseM3U(text);
+                } else {
+                    // Fallback: treat as raw URLs
+                    const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+                    lines.forEach(line => {
+                        const url = line.trim();
+                        if (url.startsWith('http')) {
+                            addChannelToCategory("Raw URLs", "Stream", url, "", "", "", "", "", "");
+                        }
+                    });
+                }
+            } catch(err) {
+                // Last resort: regex for any http url
+                const urlRegex = /(https?:\/\/[^\s"',]+)/gi;
+                const matches = text.match(urlRegex);
+                if (matches) {
+                    const uniqueUrls = [...new Set(matches)]; 
+                    let counter = 1;
+                    uniqueUrls.forEach(u => {
+                        if (!u.match(/\.(png|jpg|jpeg|gif|css|js)$/i) && !u.includes('api.github.com')) {
+                            let isEmbed = u.includes('.php') || u.includes('embed');
+                            addChannelToCategory("Recovered Streams", `Stream ${counter++}`, isEmbed ? "" : u, isEmbed ? u : "", "", "", "", "", "");
+                        }
+                    });
+                }
+            }
+
+            renderChannelsLazy();
+        }
+
+        // ==========================================
+        // ADD CHANNEL WITH DRM SUPPORT
+        // ==========================================
+        function addChannelToCategory(category, name, streamUrl, embedUrl, license, token, ref, ua, logo) {
+            if (!state.currentCategories[category]) state.currentCategories[category] = [];
+            if (!logo || logo === '') {
+                logo = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23ff0055"/%3E%3Ctext x="50" y="58" font-family="Arial" font-size="30" font-weight="bold" fill="white" text-anchor="middle"%3EDAR%3C/text%3E%3Ctext x="50" y="78" font-family="Arial" font-size="14" fill="%2300d2ff" text-anchor="middle"%3ETV%3C/text%3E%3C/svg%3E';
+            }
+            state.currentCategories[category].push({ name, url: streamUrl, embed: embedUrl, license, token, ref, ua, logo });
+            state.totalChannelsActive++;
+        }
+
+        // ==========================================
+        // IMPROVED M3U PARSER (DRM keys detection)
+        // ==========================================
+        function parseM3U(text) {
+            const lines = text.split('\n');
+            let currentGroup = "Uncategorized";
+            let currentName = "Unknown Channel";
+            let currentLic = "", currentTok = "", currentRef = "", currentUA = "", currentLogo = "";
+
+            for(let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (!line) continue;
+
+                if (line.startsWith('#EXTINF:')) {
+                    currentLic = ""; currentTok = ""; currentRef = ""; currentUA = ""; currentLogo = "";
+                    const groupMatch = line.match(/group-title="([^"]+)"/);
+                    if (groupMatch) currentGroup = groupMatch[1];
+                    const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+                    if (logoMatch) currentLogo = logoMatch[1];
+                    const titleMatch = line.split(',');
+                    if (titleMatch.length > 1) currentName = titleMatch.slice(1).join(',').trim();
+                } 
+                else if (line.startsWith('#KODIPROP:inputstream.adaptive.license_key=')) {
+                    // This can be a URL (Widevine) or keyId:key (ClearKey)
+                    let value = line.substring(line.indexOf('=') + 1).trim();
+                    currentLic = value;
+                }
+                else if (line.startsWith('#KODIPROP:inputstream.adaptive.stream_headers=')) {
+                    let headers = line.substring(line.indexOf('=') + 1).trim();
+                    let parts = decodeURIComponent(headers).split('&');
+                    parts.forEach(p => {
+                        let keyVal = p.split('=');
+                        if(keyVal.length >= 2) {
+                            let key = keyVal[0].toLowerCase();
+                            let val = keyVal.slice(1).join('=');
+                            if (key.includes('authorization')) currentTok = val;
+                            if (key.includes('user-agent')) currentUA = val;
+                            if (key.includes('referer')) currentRef = val;
+                        }
+                    });
+                }
+                else if (line.startsWith('#EXTVLCOPT:http-referrer=')) {
+                    currentRef = line.substring(line.indexOf('=') + 1).trim();
+                }
+                else if (line.startsWith('#EXTVLCOPT:http-user-agent=')) {
+                    currentUA = line.substring(line.indexOf('=') + 1).trim();
+                }
+                else if (line.startsWith('#EXTGRP:')) {
+                    currentGroup = line.substring(line.indexOf(':') + 1).trim();
+                }
+                else if (!line.startsWith('#')) {
+                    // This is a URL
+                    let isEmbed = line.includes('.php') || line.includes('player=') || line.includes('embed');
+                    addChannelToCategory(currentGroup, currentName, isEmbed ? "" : line, isEmbed ? line : "", currentLic, currentTok, currentRef, currentUA, currentLogo);
+                    currentName = "Unknown Channel";
+                }
+            }
+        }
+
+        // ==========================================
+        // IMPROVED JSON PARSER (DRM keys)
+        // ==========================================
+        function parseFuzzyJSON(data) {
+            function traverse(node, currentCategory) {
+                if (!node || typeof node !== 'object') return;
+
+                if (Array.isArray(node)) {
+                    node.forEach(item => traverse(item, currentCategory));
+                    return;
+                }
+
+                let streamUrl = "", embedUrl = "", streamName = "Event", streamLogo = "", streamLic = "", streamTok = "", streamRef = "", streamUa = "";
+                let cat = node["Tour/Group name"] || node.group_title || node.Category || node.category || node.group || currentCategory || "Live Events";
+
+                const urlKeys = ['url', 'stream', 'link', 'file', 'source', 'playlist', 'm3u8', 'mpd', 'hls', 'dash'];
+                const embedKeys = ['embed', 'iframe', 'player', 'php'];
+
+                for (let key in node) {
+                    let val = node[key];
+                    if (typeof val === 'string') {
+                        let k = key.toLowerCase();
+                        
+                        if (k.includes('logo') || k.includes('icon') || k.includes('img') || k.includes('image')) {
+                            streamLogo = val;
+                        }
+                        else if (k.includes('license') || k.includes('clearkey') || k === 'key') {
+                            streamLic = val;
+                        }
+                        else if (k.includes('name') || k.includes('title') || k.includes('channel')) {
+                            streamName = val;
+                        }
+                        else if (k.includes('token') || k.includes('auth')) {
+                            streamTok = val;
+                        }
+                        else if (k.includes('referer')) {
+                            streamRef = val;
+                        }
+                        else if (k.includes('user-agent') || k === 'ua') {
+                            streamUa = val;
+                        }
+                        else if (val.startsWith('http') && !val.match(/\.(png|jpg|jpeg|webp|gif|css|js)$/i)) {
+                            if (embedKeys.some(ek => k.includes(ek) || val.includes('.php') || val.includes('embed'))) {
+                                embedUrl = val;
+                            } else if (urlKeys.some(uk => k.includes(uk))) {
+                                streamUrl = val;
+                            } else {
+                                if (val.includes('.m3u8') || val.includes('.mpd') || val.includes('.mp4') || val.includes('.ts')) {
+                                    streamUrl = val;
+                                } else {
+                                    embedUrl = val;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (streamUrl || embedUrl) {
+                    addChannelToCategory(cat, streamName, streamUrl, embedUrl, streamLic, streamTok, streamRef, streamUa, streamLogo);
+                }
+
+                for (let key in node) {
+                    if (typeof node[key] === 'object' && node[key] !== null) {
+                        traverse(node[key], cat);
+                    }
+                }
+            }
+            traverse(data, "Live Events");
+        }
+
+        // ==========================================
+        // LAZY LOADING RENDERER
+        // ==========================================
+        function renderChannelsLazy() {
+            const container = document.getElementById('categoriesContainer');
+            document.getElementById('channelCount').innerText = `${state.totalChannelsActive} Channels`;
+            container.innerHTML = "";
+
+            if (state.totalChannelsActive === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#ff0055; padding: 20px;">No streams found.</div>`;
+                return;
+            }
+
+            const sortedCategories = Object.keys(state.currentCategories).sort();
+
+            sortedCategories.forEach(categoryName => {
+                const channels = state.currentCategories[categoryName];
+                const block = document.createElement('div');
+                block.className = 'category-block';
+                block.dataset.category = categoryName;
+
+                const btn = document.createElement('button');
+                btn.className = 'category-btn';
+                btn.innerText = `${categoryName} (${channels.length})`;
+
+                const list = document.createElement('div');
+                list.className = 'channel-list';
+                list.dataset.loaded = 'false';
+                list.innerHTML = `<div class="loading">Click to load channels</div>`;
+
+                btn.onclick = function() {
+                    this.classList.toggle('active');
+                    list.classList.toggle('active');
+                    if (list.dataset.loaded === 'false') {
+                        list.innerHTML = '';
+                        channels.forEach(ch => {
+                            const playBtn = document.createElement('button');
+                            playBtn.className = 'play-btn';
+                            let logoHtml = ch.logo ? `<img src="${ch.logo}" class="ch-logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23ff0055\\'/%3E%3Ctext x=\\'50\\' y=\\'58\\' font-family=\\'Arial\\' font-size=\\'30\\' font-weight=\\'bold\\' fill=\\'white\\' text-anchor=\\'middle\\'%3EDAR%3C/text%3E%3Ctext x=\\'50\\' y=\\'78\\' font-family=\\'Arial\\' font-size=\\'14\\' fill=\\'%2300d2ff\\' text-anchor=\\'middle\\'%3ETV%3C/text%3E%3C/svg%3E'">` : `<span class="ch-logo" style="display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#ff0055;background:#222;">D</span>`;
+                            playBtn.innerHTML = `${logoHtml}<span class="ch-name">${ch.name}</span>`;
+                            playBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                state.currentCategoryName = categoryName;
+                                playChannel(ch.url, ch.embed, ch.name, ch.license, ch.token, ch.ref, ch.ua);
+                            };
+                            list.appendChild(playBtn);
+                        });
+                        list.dataset.loaded = 'true';
+                    }
+                };
+
+                block.appendChild(btn);
+                block.appendChild(list);
+                container.appendChild(block);
+            });
+        }
+
+        // ==========================================
+        // 🎬 QUALITY SELECTOR
+        // ==========================================
+        function updateQualitySelector(levels) {
+            const select = document.getElementById('qualitySelect');
+            const badge = document.getElementById('qualityBadge');
+            
+            while (select.options.length > 0) {
+                select.remove(0);
+            }
+            
+            const autoOpt = document.createElement('option');
+            autoOpt.value = 'auto';
+            autoOpt.textContent = 'Auto';
+            select.appendChild(autoOpt);
+            
+            if (levels && levels.length > 0) {
+                const sorted = [...levels].sort((a, b) => (a.height || 0) - (b.height || 0));
+                
+                sorted.forEach((level, index) => {
+                    const opt = document.createElement('option');
+                    const label = level.height ? `${level.height}p` : `${Math.round(level.bitrate/1000)}kbps`;
+                    opt.value = index;
+                    opt.textContent = label;
+                    select.appendChild(opt);
+                });
+                
+                select.disabled = false;
+                badge.textContent = 'Auto';
+                badge.style.color = 'var(--secondary)';
+            } else {
+                select.disabled = true;
+                badge.textContent = 'N/A';
+                badge.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function changeQuality(index) {
+            const badge = document.getElementById('qualityBadge');
+            
+            if (index === 'auto') {
+                if (state.playerInstance) {
+                    try {
+                        state.playerInstance.setCurrentQuality(-1);
+                        badge.textContent = 'Auto';
+                        badge.style.color = 'var(--secondary)';
+                    } catch(e) {}
+                }
+                return;
+            }
+            
+            const idx = parseInt(index);
+            if (state.playerInstance && !isNaN(idx)) {
+                try {
+                    state.playerInstance.setCurrentQuality(idx);
+                    const select = document.getElementById('qualitySelect');
+                    const label = select.options[select.selectedIndex]?.textContent || 'Manual';
+                    badge.textContent = label;
+                    badge.style.color = '#ffaa00';
+                } catch(e) {
+                    console.warn('Quality change failed:', e);
+                }
+            }
+        }
+
+        // ==========================================
+        // 🎬 PLAYER LOGIC (with enhanced DRM)
+        // ==========================================
+        function determineStreamType(url) {
+            const cleanUrl = url.split('?')[0].toLowerCase();
+            if (cleanUrl.endsWith('.mpd')) return 'dash';
+            if (cleanUrl.endsWith('.m3u8')) return 'hls';
+            if (cleanUrl.endsWith('.mp4')) return 'mp4';
+            return ''; 
+        }
+
+        function playManual() {
+            let url = document.getElementById('manualUrl').value.trim();
+            let lic = document.getElementById('manualLic').value.trim();
+            let tok = document.getElementById('manualToken').value.trim();
+            if(!url) return;
+            
+            let isEmbed = url.includes('.php') || url.includes('player');
+            state.currentCategoryName = ""; 
+            playChannel(isEmbed ? "" : url, isEmbed ? url : "", "Manual Stream", lic, tok, "", "");
+        }
+
+        function playChannel(streamUrl, embedUrl, name, license, token, ref, ua) {
+            document.getElementById("dartv-error").style.display = "none";
+            state.retryCount = 0;
+            
+            if (!streamUrl && !embedUrl) {
+                alert("No stream link available for this channel.");
+                return;
+            }
+
+            state.currentStreamUrl = streamUrl;
+            state.currentEmbedUrl = embedUrl;
+            state.currentName = name;
+            state.currentLicense = license;
+            state.currentToken = token;
+            state.currentRef = ref;
+            state.currentUa = ua;
+
+            showView('player');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('nowPlayingText').innerText = `📺 ${name}`;
+            
+            const jwContainer = document.getElementById('jw-player-container');
+            const iframeContainer = document.getElementById('iframe-container');
+            const iframeEl = document.getElementById('iframe-element');
+            const useProxy = document.getElementById('useStreamProxy').checked;
+
+            populateGlowingTiles(); 
+            state.isIframeMode = false;
+
+            // --- IFRAME LOGIC ---
+            if ((!streamUrl && embedUrl) || (streamUrl && streamUrl.includes('.php')) || (embedUrl && embedUrl.includes('.php'))) {
+                jwContainer.style.display = 'none';
+                iframeContainer.style.display = 'block';
+                state.isIframeMode = true;
+                let targetUrl = embedUrl || streamUrl;
+                
+                if (useProxy && (ref || ua || targetUrl.includes('allinonereborn') || targetUrl.includes('iptvtree'))) {
+                    let proxyUrl = CLOUDFLARE_PROXY_URL + encodeURIComponent(targetUrl);
+                    if (ref) proxyUrl += `&ref=${encodeURIComponent(ref)}`;
+                    if (ua) proxyUrl += `&ua=${encodeURIComponent(ua)}`;
+                    iframeEl.src = proxyUrl;
+                } else {
+                    iframeEl.src = targetUrl;
+                }
+                document.getElementById('qualitySelect').disabled = true;
+                document.getElementById('qualityBadge').textContent = 'N/A';
+                return;
+            }
+
+            // --- STANDARD JW PLAYER LOGIC ---
+            iframeContainer.style.display = 'none';
+            iframeEl.src = "";
+            jwContainer.style.display = 'block';
+
+            let finalUrl = streamUrl;
+
+            if (useProxy && streamUrl.includes('.m3u8') && (ref || ua || streamUrl.includes('bhalocast') || streamUrl.includes('sanwalyaarpya') || streamUrl.includes('iptvtree'))) {
+                finalUrl = CLOUDFLARE_PROXY_URL + encodeURIComponent(streamUrl);
+                if (ref) finalUrl += `&ref=${encodeURIComponent(ref)}`;
+                if (ua) finalUrl += `&ua=${encodeURIComponent(ua)}`;
+            }
+
+            let setupConfig = { file: finalUrl, width: "100%", aspectratio: "16:9", autostart: true };
+
+            const streamType = determineStreamType(streamUrl);
+            if (streamType) setupConfig.type = streamType;
+
+            // === DRM Widevine & ClearKey ===
+            let isClearKey = false;
+            let ckId = null; let ckVal = null;
+            let licUrl = null;
+
+            // Check if license is in "keyId:key" format (ClearKey)
+            if (license && /^[a-f0-9]+:[a-f0-9]+$/i.test(license)) {
+                let parts = license.split(':'); 
+                ckId = parts[0]; 
+                ckVal = parts[1]; 
+                isClearKey = true;
+            } 
+            else if (license && license.startsWith('http')) {
+                // It's a Widevine license URL
+                licUrl = license;
+            }
+            // Also check stream URL for keyId/key parameters
+            else if (streamUrl.includes('keyId=') && streamUrl.includes('key=')) {
+                try {
+                    let urlParams = new URLSearchParams(streamUrl.substring(streamUrl.indexOf('?')));
+                    let id = urlParams.get('keyId');
+                    let key = urlParams.get('key');
+                    if (id && key) {
+                        ckId = id; 
+                        ckVal = key; 
+                        isClearKey = true;
+                    }
+                } catch(e) {}
+            }
+
+            // Apply DRM config
+            if (isClearKey && ckId && ckVal) {
+                setupConfig.drm = { 
+                    clearkey: { 
+                        keys: [{ keyId: hexToBase64Url(ckId), key: hexToBase64Url(ckVal) }] 
+                    } 
+                };
+                console.log('🔑 ClearKey DRM configured');
+            } 
+            else if (licUrl) {
+                // Widevine license URL
+                let widevineConfig = { 
+                    url: licUrl,
+                    headers: [
+                        { name: "Content-Type", value: "application/octet-stream" }
+                    ]
+                };
+                // Add token if present
+                if (token) {
+                    widevineConfig.headers.push({ name: "authorization", value: token });
+                }
+                // Add User-Agent and Referer if present
+                if (ua) {
+                    widevineConfig.headers.push({ name: "User-Agent", value: ua });
+                }
+                if (ref) {
+                    widevineConfig.headers.push({ name: "Referer", value: ref });
+                }
+                setupConfig.drm = { widevine: widevineConfig };
+                console.log('🔑 Widevine DRM configured with URL:', licUrl);
+            } else {
+                // No DRM, try to play directly
+                console.log('📺 No DRM detected, playing directly');
+            }
+
+            if (state.playerInstance) {
+                try { 
+                    state.playerInstance.stop(); 
+                    state.playerInstance.remove(); 
+                } catch(e) {}
+                state.playerInstance = null;
+            }
+
+            const playerInstance = jwplayer("jw-player-container").setup(setupConfig);
+            state.playerInstance = playerInstance;
+
+            playerInstance.on('levels', function() {
+                try {
+                    const levels = playerInstance.getQualityLevels();
+                    if (levels && levels.length > 1) {
+                        updateQualitySelector(levels);
+                    } else {
+                        document.getElementById('qualitySelect').disabled = true;
+                        document.getElementById('qualityBadge').textContent = '1x';
+                    }
+                } catch(e) {
+                    document.getElementById('qualitySelect').disabled = true;
+                }
+            });
+
+            playerInstance.on('levelsChanged', function(event) {
+                try {
+                    const levels = playerInstance.getQualityLevels();
+                    const currentIdx = playerInstance.getCurrentQuality();
+                    const badge = document.getElementById('qualityBadge');
+                    const select = document.getElementById('qualitySelect');
+                    
+                    if (currentIdx === -1 || currentIdx === undefined) {
+                        badge.textContent = 'Auto';
+                        badge.style.color = 'var(--secondary)';
+                        if (select) select.value = 'auto';
+                    } else if (levels && levels[currentIdx]) {
+                        const level = levels[currentIdx];
+                        const label = level.height ? `${level.height}p` : `${Math.round(level.bitrate/1000)}kbps`;
+                        badge.textContent = label;
+                        badge.style.color = '#ffaa00';
+                        if (select) select.value = currentIdx;
+                    }
+                } catch(e) {}
+            });
+
+            playerInstance.on('error', function(e) {
+                console.error("JW Error:", e);
+                const msg = e.message || `Error ${e.code}`;
+                // If DRM and error, suggest checking license
+                if (licUrl || isClearKey) {
+                    showCustomError(`DRM Error: ${msg}<br><br>License key may be invalid or expired. Ensure your proxy is ON and try again.`);
+                } else if (!useProxy && (e.code === 102630 || e.code === 102632 || msg.includes('CORS') || msg.includes('cross-origin'))) {
+                    showCustomError(`⚠️ CORS Block Detected!<br><br>This stream is being blocked by the server.<br><br><strong>👉 Turn ON the "Use Proxy for Stream" checkbox below</strong> to bypass this error.`);
+                } else {
+                    showCustomError(`Failed to Play: ${msg}<br><br>${useProxy ? 'Proxy is ON. Try turning it OFF.' : 'Try turning ON the proxy below.'}`);
+                }
+            });
+            
+            playerInstance.on('setupError', function(e) {
+                showCustomError(`Setup Failed: ${e.message || 'Unknown error'}<br><br>Try toggling the proxy or check the stream URL.`);
+            });
+        }
+
+        function showCustomError(diagText) {
+            const errorReason = document.getElementById("errorReason");
+            errorReason.innerHTML = diagText;
+            document.getElementById("dartv-error").style.display = "flex";
+        }
+
+        function retryStream() {
+            const proxyCheck = document.getElementById('useStreamProxy');
+            proxyCheck.checked = !proxyCheck.checked;
+            updateStreamProxyStatus(proxyCheck.checked);
+            state.retryCount++;
+            
+            playChannel(
+                state.currentStreamUrl,
+                state.currentEmbedUrl,
+                state.currentName,
+                state.currentLicense,
+                state.currentToken,
+                state.currentRef,
+                state.currentUa
+            );
+        }
+
+        function toggleProxy() {
+            const isOn = document.getElementById('useStreamProxy').checked;
+            updateStreamProxyStatus(isOn);
+            
+            if (state.playerInstance || state.isIframeMode) {
+                if (state.currentStreamUrl || state.currentEmbedUrl) {
+                    playChannel(
+                        state.currentStreamUrl,
+                        state.currentEmbedUrl,
+                        state.currentName,
+                        state.currentLicense,
+                        state.currentToken,
+                        state.currentRef,
+                        state.currentUa
+                    );
+                }
+            }
+        }
+
+        function populateGlowingTiles() {
+            const container = document.getElementById('circularContainer');
+            const section = document.getElementById('suggestedSection');
+            container.innerHTML = "";
+
+            if (!state.currentCategoryName || !state.currentCategories[state.currentCategoryName]) {
+                section.style.display = 'none'; return;
+            }
+
+            section.style.display = 'block';
+            const channels = state.currentCategories[state.currentCategoryName];
+
+            channels.forEach(ch => {
+                const circle = document.createElement('div');
+                circle.className = 'circle-tile';
+                circle.title = ch.name;
+                
+                if(ch.logo && ch.logo !== '') {
+                    circle.style.backgroundImage = `url('${ch.logo}')`;
+                } else {
+                    circle.innerHTML = `<span class="default-logo">📺</span>`;
+                }
+                
+                let shortName = ch.name.length > 20 ? ch.name.substring(0, 18) + "..." : ch.name;
+                if (!circle.style.backgroundImage || circle.style.backgroundImage === 'none') {
+                    circle.innerHTML = `<span>${shortName}</span>`;
+                }
+
+                circle.onclick = () => playChannel(ch.url, ch.embed, ch.name, ch.license, ch.token, ch.ref, ch.ua);
+                container.appendChild(circle);
+            });
+        }
+
+        // ==========================================
+        // ✋ SWIPE GESTURES
+        // ==========================================
+        const playerWrapper = document.getElementById('playerWrapper');
+        const brightOverlay = document.getElementById('brightnessOverlay');
+        let startX, startY, initVol, initPos, initBright, isTouchArea, isLeftSide;
+        let currentBrightness = 100;
+
+        playerWrapper.addEventListener('touchstart', (e) => {
+            if(e.touches.length !== 1) return;
+            const rect = playerWrapper.getBoundingClientRect();
+            const touchY = e.touches[0].clientY - rect.top;
+            
+            if(touchY > rect.height * 0.75) return; 
+
+            startX = e.touches[0].clientX - rect.left;
+            startY = e.touches[0].clientY;
+            isLeftSide = startX < (rect.width / 2);
+
+            try {
+                if (state.playerInstance) {
+                    initVol = state.playerInstance.getVolume() || 50;
+                    initPos = state.playerInstance.getPosition() || 0;
+                } else {
+                    initVol = 50; initPos = 0;
+                }
+            } catch(err) { initVol = 50; initPos = 0; }
+            
+            initBright = currentBrightness;
+            isTouchArea = true;
+        }, {passive: true});
+
+        playerWrapper.addEventListener('touchmove', (e) => {
+            if(!isTouchArea || e.touches.length !== 1) return;
+            const rect = playerWrapper.getBoundingClientRect();
+            const currentX = e.touches[0].clientX - rect.left;
+            const dx = currentX - startX;
+            const dy = startY - e.touches[0].clientY; 
+            const ind = document.getElementById('gestureIndicator');
+
+            if(Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 20) {
+                e.preventDefault(); 
+                
+                if (isLeftSide) {
+                    currentBrightness = Math.max(10, Math.min(100, initBright + (dy / 2)));
+                    let alpha = 1 - (currentBrightness / 100);
+                    brightOverlay.style.background = `rgba(0,0,0,${alpha})`;
+                    
+                    ind.style.display = 'block';
+                    ind.innerText = `☀️ ${Math.round(currentBrightness)}%`;
+                } else {
+                    let v = Math.max(0, Math.min(100, initVol + (dy / 2)));
+                    try { if (state.playerInstance) state.playerInstance.setVolume(v); } catch(err) {}
+                    
+                    ind.style.display = 'block';
+                    ind.innerText = `🔊 ${Math.round(v)}%`;
+                }
+            } 
+            else if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20) {
+                e.preventDefault(); 
+                try {
+                    if (state.playerInstance) {
+                        let dur = state.playerInstance.getDuration();
+                        if(dur > 0) { 
+                            let p = Math.max(0, Math.min(dur, initPos + (dx / 4)));
+                            state.playerInstance.seek(p);
+                            ind.style.display = 'block';
+                            ind.innerText = dx > 0 ? `⏩ +${Math.round(dx/4)}s` : `⏪ ${Math.round(dx/4)}s`;
+                        }
+                    }
+                } catch(err) {}
+            }
+        }, {passive: false});
+
+        playerWrapper.addEventListener('touchend', () => {
+            isTouchArea = false;
+            setTimeout(() => { document.getElementById('gestureIndicator').style.display = 'none'; }, 800);
+        });
+    </script>
+</body>
+</html>
